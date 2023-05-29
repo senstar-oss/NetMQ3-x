@@ -19,6 +19,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define ADD_ERROR_CODE_MESSAGE
+
 using System;
 using System.Diagnostics;
 using System.Net.Sockets;
@@ -235,8 +237,13 @@ namespace NetMQ.Core.Transports.Tcp
                 {
                     m_acceptedSocket.Dispose();
 
-                    NetMQException exception = NetMQException.Create(socketError);
+#if ADD_ERROR_CODE_MESSAGE
+                    var message = $"An error occurred during NetMQ {nameof(InCompleted)} : {nameof(socketError)} = {socketError.ToString()} ({(int)socketError}), {nameof(bytesTransferred)} = {bytesTransferred}";
 
+                    NetMQException exception = NetMQException.Create(message, socketError.ToErrorCode());
+#else                        
+                    NetMQException exception = NetMQException.Create(socketError);
+#endif
                     m_socket.EventAcceptFailed(m_endpoint, exception.ErrorCode);
                     throw exception;
                 }
